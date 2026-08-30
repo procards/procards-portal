@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Commission Portal</title>
+<style>
+  :root{
+    --navy:#000000; --navy-2:#161616; --blue:#d4af37; --sky:#f0cd6b;
+    --bg:#0d0d0e; --card:#1a1a1c; --line:#3a3529; --text:#f2ead4; --muted:#b8a76e;
+    --red:#f87171; --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+  header.app-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;padding:18px 20px;position:sticky;top:0;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  header.app-header h1{margin:0;font-size:17px;font-weight:700;}
+  header.app-header p{margin:2px 0 0;font-size:12px;color:#d9c690;}
+  main{max-width:900px;margin:0 auto;padding:18px 14px 60px;}
+  .section-title{font-size:15px;font-weight:700;margin:22px 0 10px;color:var(--sky);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .section-title .hint{font-size:11.5px;font-weight:500;color:var(--muted);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;margin-bottom:6px;}
+  .stat .value{font-size:19px;font-weight:800;color:var(--text);}
+  .stat .value.money{color:var(--blue);}
+  .stat.grand{border-color:var(--blue);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto;}
+  .btn{background:var(--blue);color:#0d0d0e;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn:hover{background:var(--sky);}
+  .btn.secondary{background:transparent;color:var(--blue);border:1px solid var(--blue);}
+  .btn.small{padding:5px 10px;font-size:11.5px;border-radius:6px;}
+  .btn.full{width:100%;}
+  label{font-size:11.5px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;}
+  input[type=password]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#232320;color:var(--text);}
+  input:focus{outline:2px solid var(--sky);outline-offset:1px;}
+  .empty{text-align:center;color:var(--muted);font-size:12.5px;padding:22px 10px;}
+  .muted{color:var(--muted);}
+  .error{color:var(--red);font-size:12px;margin-top:10px;}
+  footer.save-note{text-align:center;color:var(--muted);font-size:11px;padding:16px 0 4px;}
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>Agent Commission Portal</h1>
+    <p>PROcards Commission CRM</p>
+  </header>
+  <main id="main"></main>
+
+<script>
+/* ---------------- Utilities ---------------- */
+const peso = (n) => {
+  n = Number(n)||0;
+  return n.toLocaleString('en-PH',{style:'currency',currency:'PHP',maximumFractionDigits:0});
+};
+const escapeHtml = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let crmState = null;
+let currentAgent = null;
+let pollTimer = null;
+
+const SUPABASE_URL = 'https://djffchbmdvclzcfvoyhi.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable__zMWLW4AsgYkDMFJGZH_Sg_2apYlo-i';
+const STORAGE_KEY = 'procards-crm-state';
+
+async function sbGet(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_data?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  });
+  if(!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  const rows = await res.json();
+  return rows.length ? rows[0].value : null;
+}
+
+/* ---------------- Data ---------------- */
+function findCardType(agency, ctId){ return (agency.cardTypes||[]).find(c=>c.id===ctId); }
+
+function computeAgentFinal(entry, dnaRate){
+  const agentBase = Number(entry.agentRate)||0;
+  if(entry.status === 'DNA'){
+    return agentBase - (Number(dnaRate)||0);
+  }
+  return agentBase;
+}
+
+async function loadCrmState(){
+  try{
+    const value = await sbGet(STORAGE_KEY);
+    if(value) crmState = value;
+  }catch(e){
+    console.error('Load failed:', e); // no data saved yet, or connection issue
+  }
+}
+
+function recordsForAgent(agentId){
+  if(!crmState || !crmState.agencies) return [];
+  const dnaRate = crmState.settings ? crmState.settings.dnaRate : 0;
+  let list = [];
+  crmState.agencies.filter(ag=>!ag.overview).forEach(ag=>{
+    (ag.entries||[]).filter(e=>e.agentId===agentId).forEach(e=>{
+      const ct = findCardType(ag, e.cardTypeId);
+      list.push({
+        clientName: e.clientName,
+        date: e.date,
+        agencyName: ag.name,
+        cardTypeName: ct ? ct.name : (e.cardTypeNameSnapshot || '\u2014'),
+        commission: computeAgentFinal(e, dnaRate)
+      });
+    });
+  });
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+  return list;
+}
+
+/* ---------------- Views ---------------- */
+function renderLogin(msg){
+  clearInterval(pollTimer);
+  document.getElementById('main').innerHTML = `
+    <div class="card" style="max-width:360px;margin:40px auto;text-align:center;">
+      <div style="font-size:32px;margin-bottom:6px;">\ud83d\udd11</div>
+      <div style="font-weight:800;color:var(--sky);font-size:15px;margin-bottom:4px;">Agent Login</div>
+      <div class="muted" style="font-size:12px;margin-bottom:16px;">Enter your assigned PIN to view your commission report.</div>
+      <form onsubmit="submitLogin(event)">
+        <input type="password" inputmode="numeric" id="pin-input" placeholder="Enter PIN" autocomplete="off" style="text-align:center;letter-spacing:3px;font-size:16px;">
+        <button type="submit" class="btn full" style="margin-top:10px;">View My Report</button>
+      </form>
+      ${msg ? `<div class="error">${escapeHtml(msg)}</div>` : ''}
+    </div>
+  `;
+}
+
+async function submitLogin(ev){
+  ev.preventDefault();
+  const val = document.getElementById('pin-input').value.trim();
+  if(!val){ renderLogin('Enter your PIN.'); return; }
+  await loadCrmState();
+  if(!crmState || !Array.isArray(crmState.agents) || !crmState.agents.length){
+    renderLogin('No agent data found yet. Ask your admin to set up your PIN in the CRM.');
+    return;
+  }
+  const agent = crmState.agents.find(a => a.pin && String(a.pin) === val);
+  if(!agent){ renderLogin('Incorrect PIN.'); return; }
+  currentAgent = agent;
+  renderReport();
+  pollTimer = setInterval(async () => { await loadCrmState(); renderReport(); }, 15000);
+}
+
+function logout(){
+  currentAgent = null;
+  renderLogin();
+}
+
+function renderReport(){
+  const entries = recordsForAgent(currentAgent.id);
+  const byAgency = {};
+  let grand = 0;
+  entries.forEach(e=>{
+    byAgency[e.agencyName] = (byAgency[e.agencyName]||0) + e.commission;
+    grand += e.commission;
+  });
+
+  document.getElementById('main').innerHTML = `
+    <div class="section-title">
+      ${escapeHtml(currentAgent.name)}
+      <button class="btn small secondary" onclick="logout()">Log out</button>
+    </div>
+
+    <div class="section-title">Total Gross Commission <span class="hint">by agency</span></div>
+    <div class="grid">
+      ${Object.keys(byAgency).length ? Object.entries(byAgency).map(([name,amt])=>`
+        <div class="stat"><div class="label">${escapeHtml(name)}</div><div class="value money">${peso(amt)}</div></div>
+      `).join('') : ''}
+      <div class="stat grand"><div class="label">Grand Total</div><div class="value money">${peso(grand)}</div></div>
+    </div>
+
+    <div class="section-title">My Records</div>
+    <div class="card table-wrap">
+      ${entries.length ? `
+      <table>
+        <thead><tr><th>Client Name</th><th>Date Approved</th><th>Agency Name</th><th>Card Type</th><th>Commission</th></tr></thead>
+        <tbody>
+        ${entries.map(e=>`
+          <tr>
+            <td>${escapeHtml(e.clientName)}</td>
+            <td>${e.date}</td>
+            <td>${escapeHtml(e.agencyName)}</td>
+            <td>${escapeHtml(e.cardTypeName)}</td>
+            <td>${peso(e.commission)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No records yet.</div>'}
+    </div>
+    <footer class="save-note">Report refreshes automatically every 15 seconds</footer>
+  `;
+}
+
+/* ---------------- Init ---------------- */
+(async function init(){
+  await loadCrmState();
+  renderLogin();
+})();
+</script>
+</body>
+</html>

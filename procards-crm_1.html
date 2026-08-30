@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROcards Commission CRM</title>
+<style>
+  :root{
+    --navy:#000000;
+    --navy-2:#161616;
+    --blue:#d4af37;
+    --sky:#f0cd6b;
+    --bg:#0d0d0e;
+    --card:#1a1a1c;
+    --line:#3a3529;
+    --text:#f2ead4;
+    --muted:#b8a76e;
+    --green:#4ade80;
+    --green-bg:rgba(74,222,128,.14);
+    --amber:#f0cd6b;
+    --amber-bg:rgba(240,205,107,.14);
+    --gray:#a3a3a3;
+    --gray-bg:rgba(163,163,163,.14);
+    --red:#f87171;
+    --red-bg:rgba(248,113,113,.14);
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  header.app-header{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+  }
+  header.app-header img{
+    height:40px;
+    width:auto;
+    border-radius:6px;
+    background:#fff;
+    padding:4px;
+  }
+  header.app-header .titles h1{
+    margin:0;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+  header.app-header .titles p{
+    margin:2px 0 0;
+    font-size:12px;
+    color:#b9cbe0;
+  }
+  nav.tabs{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding:10px 14px;
+    background:var(--navy-2);
+    position:sticky;
+    top:76px;
+    z-index:19;
+    -webkit-overflow-scrolling:touch;
+  }
+  nav.tabs::-webkit-scrollbar{height:4px;}
+  nav.tabs button{
+    flex:none;
+    background:rgba(212,175,55,.08);
+    color:#d9c690;
+    border:1px solid rgba(212,175,55,.25);
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav.tabs button.active{
+    background:var(--blue);
+    color:#0d0d0e;
+    border-color:var(--blue);
+  }
+  nav.tabs button.add-btn{
+    background:transparent;
+    border:1px dashed rgba(212,175,55,.4);
+    color:#d9c690;
+  }
+  nav.subtabs{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    margin-bottom:14px;
+  }
+  nav.subtabs button{
+    flex:none;
+    background:var(--card);
+    color:var(--muted);
+    border:1px solid var(--line);
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav.subtabs button.active{
+    background:var(--blue);
+    color:#0d0d0e;
+    border-color:var(--blue);
+  }
+  main{
+    max-width:1080px;
+    margin:0 auto;
+    padding:18px 14px 60px;
+  }
+  .section-title{
+    font-size:15px;
+    font-weight:700;
+    margin:22px 0 10px;
+    color:var(--sky);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .section-title .hint{font-size:11.5px;font-weight:500;color:var(--muted);}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
+  }
+  .stat{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+  }
+  .stat .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--muted);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .stat .value{
+    font-size:19px;
+    font-weight:800;
+    color:var(--text);
+  }
+  .stat .value.money{color:var(--blue);}
+  .stat .value.penalty{color:var(--red);}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    color:var(--muted);
+    padding:8px 8px;
+    border-bottom:2px solid var(--line);
+    white-space:nowrap;
+  }
+  td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tr:last-child td{border-bottom:none;}
+  tr.clickable{cursor:pointer;}
+  tr.clickable:hover{background:rgba(212,175,55,.06);}
+  .table-wrap{overflow-x:auto;}
+  .badge{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:700;
+  }
+  .badge-PAID{background:var(--green-bg);color:var(--green);}
+  .badge-ONHOLD{background:var(--gray-bg);color:var(--gray);}
+  .badge-DNA{background:var(--red-bg);color:var(--red);}
+  select.status-select{
+    font-size:11.5px;
+    font-weight:700;
+    padding:4px 6px;
+    border-radius:8px;
+    border:1px solid var(--line);
+  }
+  select.status-select.st-PAID{background:var(--green-bg);color:var(--green);}
+  select.status-select.st-ONHOLD{background:var(--gray-bg);color:var(--gray);}
+  select.status-select.st-DNA{background:var(--red-bg);color:var(--red);}
+  .btn{
+    background:var(--blue);
+    color:#0d0d0e;
+    border:none;
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--sky);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--blue);
+    border:1px solid var(--blue);
+  }
+  .btn.danger{background:transparent;color:var(--red);border:1px solid var(--red);}
+  .btn.small{padding:5px 10px;font-size:11.5px;border-radius:6px;}
+  .btn.full{width:100%;}
+  form.form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px;
+    align-items:end;
+  }
+  label{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    display:block;
+    margin-bottom:4px;
+  }
+  input[type=text],input[type=number],input[type=date],input[type=month],select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:13px;
+    background:#232320;
+    color:var(--text);
+  }
+  input:focus,select:focus{outline:2px solid var(--sky);outline-offset:1px;}
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:22px 10px;
+  }
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(10,20,35,.5);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;
+    overflow-y:auto;
+    padding:10px 0;
+  }
+  .modal{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px 16px 0 0;
+    padding:18px;
+    width:100%;
+    max-width:520px;
+    max-height:90vh;
+    overflow-y:auto;
+    color:var(--text);
+  }
+  @media(min-width:600px){
+    .modal-overlay{align-items:center;}
+    .modal{border-radius:16px;}
+  }
+  .modal h3{margin:0 0 12px;font-size:16px;color:var(--sky);}
+  .modal-actions{display:flex;gap:8px;margin-top:14px;}
+  .row{display:flex;gap:8px;align-items:center;}
+  .top3-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .top3-item:last-child{border-bottom:none;}
+  .top3-rank{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--blue);color:#0d0d0e;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;flex:none;
+  }
+  .top3-item:nth-child(1) .top3-rank{background:#f0cd6b;}
+  .top3-item:nth-child(2) .top3-rank{background:#c9c9c9;}
+  .top3-item:nth-child(3) .top3-rank{background:#8a5a3b;}
+  .top3-info{flex:1;}
+  .top3-info .n{font-weight:700;font-size:13px;color:var(--text);}
+  .top3-info .c{font-size:12px;color:var(--muted);}
+  .top3-amt{font-weight:800;color:var(--blue);font-size:13.5px;}
+  .filters{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .muted{color:var(--muted);}
+  .rate-row{
+    display:grid;
+    grid-template-columns:1.6fr 1fr 1fr 32px;
+    gap:8px;
+    align-items:center;
+    padding:6px 0;
+    border-bottom:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .rate-row:last-child{border-bottom:none;}
+  .rate-row input{padding:6px 8px;font-size:12.5px;}
+  .rate-head{
+    display:grid;
+    grid-template-columns:1.6fr 1fr 1fr 32px;
+    gap:8px;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    color:var(--muted);
+    font-weight:700;
+    padding-bottom:6px;
+  }
+  .accordion-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 4px;cursor:pointer;font-weight:700;color:var(--sky);font-size:13.5px;
+  }
+  .icon-btn{
+    background:none;border:none;cursor:pointer;color:var(--muted);
+    font-size:14px;padding:2px 6px;
+  }
+  .icon-btn:hover{color:var(--red);}
+  .back-link{
+    background:none;border:none;color:var(--blue);font-size:12.5px;font-weight:700;
+    cursor:pointer;padding:0 0 10px;
+  }
+  footer.save-note{
+    text-align:center;color:var(--muted);font-size:11px;padding:16px 0 4px;
+  }
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="titles">
+      <h1>PROcards Commission CRM</h1>
+      <p id="header-date"></p>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <main id="main"></main>
+  <footer class="save-note" id="save-note"></footer>
+  <div id="modal-root"></div>
+
+<script>
+
+/* ---------------- Utilities ---------------- */
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const peso = (n) => {
+  n = Number(n)||0;
+  return n.toLocaleString('en-PH',{style:'currency',currency:'PHP',maximumFractionDigits:0});
+};
+const escapeHtml = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const todayStr = () => new Date().toISOString().slice(0,10);
+const curMonthStr = () => new Date().toISOString().slice(0,7);
+const monthLabelFromStr = (ym) => {
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+};
+const STATUSES = ['PAID','ONHOLD','DNA'];
+const STATUS_LABEL = { PAID:'Paid', ONHOLD:'On Hold', DNA:'DNA' };
+const BANK_PREFIXES = ['MTB Non-QR','MTB-QR','MTB','RCBC','BPI','BOC'];
+
+function bankFromCardType(agencyName, cardTypeName){
+  for(const p of BANK_PREFIXES){
+    if(cardTypeName.startsWith(p)) return p.replace(' Non-QR','').replace('-QR','');
+  }
+  return agencyName;
+}
+
+/* ---------------- Default State ---------------- */
+function defaultState(){
+  return {
+    settings: { dnaRate: 10000 },
+    ui: {
+      activeTab: 'admin',
+      mainMonth: curMonthStr(),
+      recordsAgent: 'all', recordsFrom: '', recordsTo: '',
+      agencySection: {}, // agencyId -> 'portal'|'tracker'|'report'
+      agencyMonth: {},   // agencyId -> 'YYYY-MM' for tracker
+      agencyReportMode: {}, // agencyId -> 'weekly'|'monthly'
+      selectedAgent: {}, // agencyId -> agent name or null (portal drilldown)
+      mainSelectedAgent: null, // agent name selected in ProCards main Agent Portal
+      ratesOpen: {}, // agencyId -> bool, accordion state in rates manager
+      reportSelectedAgent: null // agent id selected in the top-level Agent Portal tab
+    },
+    agents: [],
+    agencies: [
+      { id:'procards', name:'ProCards', overview:true },
+      { id:'unionbank', name:'Unionbank',
+        cardTypes:[ {id:'ub-fixed', name:'Fixed', range:'', umRate:1500, agentRate:1000} ],
+        entries:[] },
+      { id:'orc', name:'ORC Mktg Srvcs.',
+        cardTypes:[
+          {id:'orc-classic', name:'Classic', range:'\u20b150,000-below', umRate:2150, agentRate:1800},
+          {id:'orc-gold', name:'Gold', range:'\u20b151,000-\u20b1299,000', umRate:2600, agentRate:2200},
+          {id:'orc-platinum', name:'Platinum', range:'\u20b1300,000-Up', umRate:3500, agentRate:2800}
+        ],
+        entries:[] },
+      { id:'ecr', name:'ECR',
+        cardTypes:[
+          {id:'ecr-mtbnqg', name:'MTB Non-QR Gold', range:'', umRate:2150, agentRate:1500},
+          {id:'ecr-mtbnqp', name:'MTB Non-QR Plat', range:'', umRate:3150, agentRate:2500},
+          {id:'ecr-mtbqg', name:'MTB-QR Gold', range:'', umRate:3050, agentRate:2400},
+          {id:'ecr-mtbqp', name:'MTB-QR Plat', range:'', umRate:4050, agentRate:3400},
+          {id:'ecr-rcbcc', name:'RCBC Classic', range:'', umRate:800, agentRate:600},
+          {id:'ecr-rcbcg', name:'RCBC Gold', range:'', umRate:1700, agentRate:1300},
+          {id:'ecr-rcbcp', name:'RCBC Plat', range:'', umRate:2700, agentRate:2400},
+          {id:'ecr-rcbci', name:'RCBC Infinite', range:'', umRate:3200, agentRate:3000},
+          {id:'ecr-bpif', name:'BPI Fixed', range:'', umRate:2100, agentRate:1700},
+          {id:'ecr-bocg', name:'BOC Gold', range:'', umRate:1500, agentRate:1000},
+          {id:'ecr-bocc', name:'BOC Classic', range:'', umRate:1100, agentRate:700},
+          {id:'ecr-bocp', name:'BOC Plat', range:'', umRate:2000, agentRate:1500}
+        ],
+        entries:[] }
+    ]
+  };
+}
+
+let state = defaultState();
+let saveTimer = null;
+let unlocked = false; // in-memory only, not persisted; resets on reload
+const APP_PIN = '041026';
+
+const SUPABASE_URL = 'https://djffchbmdvclzcfvoyhi.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable__zMWLW4AsgYkDMFJGZH_Sg_2apYlo-i';
+const STORAGE_KEY = 'procards-crm-state';
+
+async function sbGet(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_data?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  });
+  if(!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  const rows = await res.json();
+  return rows.length ? rows[0].value : null;
+}
+
+async function sbSet(key, value){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/crm_data`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify([{ key, value, updated_at: new Date().toISOString() }])
+  });
+  if(!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+}
+
+/* ---------------- Persistence ---------------- */
+async function loadState(){
+  try{
+    const value = await sbGet(STORAGE_KEY);
+    if(value){
+      const parsed = value;
+      state = Object.assign(defaultState(), parsed);
+      state.ui = Object.assign(defaultState().ui, parsed.ui||{});
+      if(!state.settings) state.settings = {dnaRate:10000};
+      if(!state.agents) state.agents = [];
+    }
+  }catch(e){ console.error('Load failed:', e); document.getElementById('save-note').textContent = 'Load error: ' + (e.message||JSON.stringify(e)); }
+  renderAll();
+}
+
+function saveState(){
+  document.getElementById('save-note').textContent = 'Saving...';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try{
+      await sbSet(STORAGE_KEY, state);
+      document.getElementById('save-note').textContent = 'All changes saved \u00b7 ' + new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){
+      console.error('Save failed:', e);
+      document.getElementById('save-note').textContent = 'Save error: ' + (e.message || JSON.stringify(e));
+    }
+  }, 250);
+}
+
+function update(mutator){
+  mutator(state);
+  saveState();
+  renderAll();
+}
+
+/* ---------------- Data Helpers ---------------- */
+function getAgency(id){ return state.agencies.find(a=>a.id===id); }
+function nonOverviewAgencies(){ return state.agencies.filter(a=>!a.overview); }
+function findCardType(agency, ctId){ return agency.cardTypes.find(c=>c.id===ctId); }
+function getAgentName(agentId){ const a = state.agents.find(x=>x.id===agentId); return a?a.name:'\u2014'; }
+
+function computeEntryFigures(entry){
+  const agencyCommission = Number(entry.umRate)||0; // gross UM rate captured at entry time
+  const agentBase = Number(entry.agentRate)||0;
+  const umCommission = agencyCommission - agentBase;
+  let dnaDeducted = 0;
+  let agentFinal = agentBase;
+  if(entry.status === 'DNA'){
+    dnaDeducted = Number(state.settings.dnaRate)||0;
+    agentFinal = agentBase - dnaDeducted;
+  }
+  return { agencyCommission, agentBase, agentFinal, umCommission, dnaDeducted };
+}
+
+function allEntriesFlat(){
+  let list = [];
+  nonOverviewAgencies().forEach(ag=>{
+    ag.entries.forEach(e=>{
+      const f = computeEntryFigures(e);
+      const ct = findCardType(ag, e.cardTypeId);
+      list.push({
+        ...e,
+        agencyId: ag.id, agencyName: ag.name,
+        cardTypeName: ct?ct.name:(e.cardTypeNameSnapshot||'\u2014'),
+        agentName: getAgentName(e.agentId),
+        bankName: bankFromCardType(ag.name, ct?ct.name:(e.cardTypeNameSnapshot||'')),
+        ...f
+      });
+    });
+  });
+  return list;
+}
+
+function inDateRange(dateStr, from, to){
+  if(from && dateStr < from) return false;
+  if(to && dateStr > to) return false;
+  return true;
+}
+
+function weekKey(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const jan1 = new Date(d.getFullYear(),0,1);
+  const days = Math.floor((d - jan1)/86400000);
+  const week = Math.ceil((days + jan1.getDay() + 1)/7);
+  return d.getFullYear()+'-W'+String(week).padStart(2,'0');
+}
+
+
+/* ---------------- Render dispatch ---------------- */
+function renderAll(){
+  document.getElementById('header-date').textContent = monthLabelFromStr(curMonthStr());
+  renderTabs();
+  renderMain();
+}
+
+function renderTabs(){
+  const tabsEl = document.getElementById('tabs');
+  let html = '';
+  html += `<button class="${state.ui.activeTab==='admin'?'active':''}" onclick="setTab('admin')">\ud83d\udcdd Admin</button>`;
+  html += `<button class="${state.ui.activeTab==='agentportal'?'active':''}" onclick="setTab('agentportal')">${unlocked?'':'\ud83d\udd12 '}Agent Portal</button>`;
+  state.agencies.forEach(a=>{
+    const lockIcon = unlocked ? (a.overview?'\u2b50 ':'') : '\ud83d\udd12 ';
+    html += `<button class="${state.ui.activeTab===a.id?'active':''}" onclick="setTab('${a.id}')">${lockIcon}${escapeHtml(a.name)}</button>`;
+  });
+  if(unlocked){
+    html += `<button class="add-btn" onclick="openAddAgencyModal()">+ Add Agency</button>`;
+  }
+  html += `<button class="${state.ui.activeTab==='settings'?'active':''}" onclick="setTab('settings')">${unlocked?'\u2699\ufe0f':'\ud83d\udd12'} Settings</button>`;
+  tabsEl.innerHTML = html;
+}
+
+function setTab(id){
+  state.ui.activeTab = id;
+  renderAll();
+}
+
+function renderMain(){
+  const el = document.getElementById('main');
+  const tab = state.ui.activeTab;
+  if(tab === 'admin'){ el.innerHTML = renderAdminTab(); return; }
+  if(!unlocked){ el.innerHTML = renderLockScreen(); return; }
+  if(tab === 'settings'){ el.innerHTML = renderSettingsTab(); return; }
+  if(tab === 'agentportal'){ el.innerHTML = renderAgentPortalTab(); return; }
+  const agency = getAgency(tab);
+  if(!agency){ el.innerHTML = '<div class="empty">Agency not found.</div>'; return; }
+  if(agency.overview){ el.innerHTML = renderMainTab(agency); return; }
+  el.innerHTML = renderAgencyTab(agency);
+}
+
+/* ---------------- PIN Lock ---------------- */
+function renderLockScreen(){
+  return `
+    <div class="card" style="max-width:360px;margin:40px auto;text-align:center;">
+      <div style="font-size:32px;margin-bottom:6px;">\ud83d\udd12</div>
+      <div style="font-weight:800;color:var(--sky);font-size:15px;margin-bottom:4px;">This section is protected</div>
+      <div class="muted" style="font-size:12px;margin-bottom:16px;">Enter the PIN to view commission data.</div>
+      <form onsubmit="submitPin(event)">
+        <input type="password" inputmode="numeric" id="pin-input" placeholder="Enter PIN" autocomplete="off" style="text-align:center;letter-spacing:3px;font-size:16px;">
+        <button type="submit" class="btn full" style="margin-top:10px;">Unlock</button>
+      </form>
+    </div>
+  `;
+}
+
+function submitPin(ev){
+  ev.preventDefault();
+  const val = document.getElementById('pin-input').value.trim();
+  if(val === APP_PIN){
+    unlocked = true;
+    renderAll();
+  } else {
+    alert('Incorrect PIN.');
+  }
+}
+
+
+/* ---------------- ProCards Main Tab ---------------- */
+function renderMainTab(agency){
+  const ui = state.ui;
+  const month = ui.mainMonth || curMonthStr();
+  const all = allEntriesFlat();
+  const monthEntries = all.filter(e => e.date.slice(0,7) === month);
+
+  const totalTeamCommission = monthEntries.reduce((s,e)=>s+e.agencyCommission,0); // A
+  const totalReleased = monthEntries.reduce((s,e)=>s+e.agentFinal,0); // B
+  const umCommission = totalTeamCommission - totalReleased;
+
+  const byAgent = {};
+  monthEntries.forEach(e=>{
+    byAgent[e.agentName] = (byAgent[e.agentName]||0) + e.agentFinal;
+  });
+  const top3 = Object.entries(byAgent).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  // filtered records table (independent of month filter, uses its own agent/date filters)
+  let records = all.slice();
+  if(ui.recordsAgent !== 'all') records = records.filter(e=>e.agentName === ui.recordsAgent);
+  records = records.filter(e => inDateRange(e.date, ui.recordsFrom, ui.recordsTo));
+  records.sort((a,b)=>b.date.localeCompare(a.date));
+
+  return `
+    <div class="section-title">
+      Team Commission Report
+      <span><input type="month" value="${month}" onchange="setMainMonth(this.value)" style="width:auto;"></span>
+    </div>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">${monthLabelFromStr(month)} \u00b7 across Unionbank, ORC Mktg Srvcs. and ECR</div>
+
+    <div class="grid">
+      <div class="stat"><div class="label">A \u00b7 Total Team Commission</div><div class="value money">${peso(totalTeamCommission)}</div></div>
+      <div class="stat"><div class="label">B \u00b7 Total Released Commission to Agent</div><div class="value money">${peso(totalReleased)}</div></div>
+      <div class="stat"><div class="label">Unit Manager Commission (A \u2212 B)</div><div class="value money">${peso(umCommission)}</div></div>
+    </div>
+
+    <div class="section-title">Top 3 Agents <span class="hint">by commission released, ${monthLabelFromStr(month)}</span></div>
+    <div class="card">
+      ${top3.length ? top3.map(([name,amt],i)=>`
+        <div class="top3-item">
+          <div class="top3-rank">${i+1}</div>
+          <div class="top3-info"><div class="n">${escapeHtml(name)}</div><div class="c">Commission released this month</div></div>
+          <div class="top3-amt">${peso(amt)}</div>
+        </div>
+      `).join('') : '<div class="empty">No approvals recorded yet this month.</div>'}
+    </div>
+
+    <div class="section-title">
+      Client Records
+      <span class="row">
+        <button class="btn small secondary" onclick="openAddAgentModal()">+ Add Agent</button>
+        <button class="btn small" onclick="openAddClientModal()">+ Add Client</button>
+      </span>
+    </div>
+    <div class="card">
+      <div class="filters">
+        <div>
+          <label>Agent</label>
+          <select onchange="setUiVal('recordsAgent', this.value)">
+            <option value="all" ${ui.recordsAgent==='all'?'selected':''}>All Agents</option>
+            ${state.agents.map(a=>`<option value="${escapeHtml(a.name)}" ${ui.recordsAgent===a.name?'selected':''}>${escapeHtml(a.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div><label>From</label><input type="date" value="${ui.recordsFrom}" onchange="setUiVal('recordsFrom', this.value)"></div>
+        <div><label>To</label><input type="date" value="${ui.recordsTo}" onchange="setUiVal('recordsTo', this.value)"></div>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      ${records.length ? `
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Client</th><th>Agency</th><th>Card Type</th>
+          <th>UM Rate</th><th>Agent</th><th>Agent Comm.</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>
+        ${records.map(e=>`
+          <tr>
+            <td>${e.date}</td>
+            <td>${escapeHtml(e.clientName)}</td>
+            <td>${escapeHtml(e.agencyName)}</td>
+            <td>${escapeHtml(e.cardTypeName)}</td>
+            <td>${peso(e.agencyCommission)}</td>
+            <td>${escapeHtml(e.agentName)}</td>
+            <td>${peso(e.agentFinal)}</td>
+            <td><select class="status-select st-${e.status}" onchange="updateEntryStatus('${e.agencyId}','${e.id}', this.value)">
+              ${STATUSES.map(s=>`<option value="${s}" ${s===e.status?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}
+            </select></td>
+            <td><button class="icon-btn" onclick="removeEntry('${e.agencyId}','${e.id}')">\u2716</button></td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No client records match these filters.</div>'}
+    </div>
+
+    ${renderMainAgentPortal(all)}
+
+    <div class="section-title">Commission Rates <span class="hint">Editable by card type</span></div>
+    ${nonOverviewAgencies().map(ag => renderRatesAccordion(ag)).join('')}
+  `;
+}
+
+function renderMainAgentPortal(all){
+  const selected = state.ui.mainSelectedAgent;
+
+  // rank all agents by all-time total commission earned, across all agencies
+  const byAgent = {};
+  all.forEach(e=>{
+    if(!byAgent[e.agentName]) byAgent[e.agentName] = { count:0, total:0 };
+    byAgent[e.agentName].count++;
+    byAgent[e.agentName].total += e.agentFinal;
+  });
+  const ranked = Object.entries(byAgent).sort((a,b)=>b[1].total-a[1].total);
+
+  if(selected){
+    const agentEntries = all.filter(e=>e.agentName===selected).sort((a,b)=>b.date.localeCompare(a.date));
+    const total = agentEntries.reduce((s,e)=>s+e.agentFinal,0);
+    const rank = ranked.findIndex(([name])=>name===selected) + 1;
+    return `
+      <div class="section-title">Agent Portal</div>
+      <button class="back-link" onclick="selectMainPortalAgent(null)">\u2190 Back to all agents</button>
+      <div class="grid">
+        <div class="stat"><div class="label">Agent</div><div class="value">${escapeHtml(selected)}</div></div>
+        <div class="stat"><div class="label">Rank</div><div class="value">#${rank}</div></div>
+        <div class="stat"><div class="label">Total Records</div><div class="value">${agentEntries.length}</div></div>
+        <div class="stat"><div class="label">Total Commission Earned</div><div class="value money">${peso(total)}</div></div>
+      </div>
+      <div class="card table-wrap">
+        ${agentEntries.length ? `
+        <table>
+          <thead><tr><th>Date</th><th>Client</th><th>Agency</th><th>Card Type</th><th>Commission</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          ${agentEntries.map(e=>`
+            <tr>
+              <td>${e.date}</td>
+              <td>${escapeHtml(e.clientName)}</td>
+              <td>${escapeHtml(e.agencyName)}</td>
+              <td>${escapeHtml(e.cardTypeName)}</td>
+              <td>${peso(e.agentFinal)}</td>
+              <td><select class="status-select st-${e.status}" onchange="updateEntryStatus('${e.agencyId}','${e.id}', this.value)">
+                ${STATUSES.map(s=>`<option value="${s}" ${s===e.status?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}
+              </select></td>
+              <td><button class="icon-btn" onclick="removeEntry('${e.agencyId}','${e.id}')">\u2716</button></td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>` : '<div class="empty">No records for this agent yet.</div>'}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="section-title">Agent Portal <span class="hint">Ranked by total commission earned, all agencies</span></div>
+    <div class="card table-wrap">
+      ${ranked.length ? `
+      <table>
+        <thead><tr><th>Rank</th><th>Agent</th><th>Total Records</th><th>Total Commission</th></tr></thead>
+        <tbody>
+        ${ranked.map(([name,v],i)=>`
+          <tr class="clickable" onclick="selectMainPortalAgent('${name.replace(/'/g,"\\'")}')">
+            <td>#${i+1}</td>
+            <td><b>${escapeHtml(name)}</b></td>
+            <td>${v.count}</td>
+            <td>${peso(v.total)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No client records yet. Add a client to get started.</div>'}
+    </div>
+  `;
+}
+
+function selectMainPortalAgent(name){
+  state.ui.mainSelectedAgent = name;
+  renderMain();
+}
+
+function setMainMonth(val){
+  state.ui.mainMonth = val;
+  renderMain();
+}
+
+function setUiVal(key, val){
+  state.ui[key] = val;
+  renderMain();
+}
+
+function renderRatesAccordion(agency){
+  const open = !!state.ui.ratesOpen[agency.id];
+  return `
+    <div class="card" style="padding:4px 16px;">
+      <div class="accordion-head" onclick="toggleRatesAccordion('${agency.id}')">
+        <span>${escapeHtml(agency.name)}</span>
+        <span>${open?'\u2212':'+'}</span>
+      </div>
+      ${open ? `
+        <div class="rate-head"><span>Card Type</span><span>UM Rate</span><span>Agent Rate</span><span></span></div>
+        ${agency.cardTypes.map(ct=>`
+          <div class="rate-row">
+            <span>${escapeHtml(ct.name)}${ct.range?`<br><span class="muted" style="font-size:10.5px;">${escapeHtml(ct.range)}</span>`:''}</span>
+            <input type="number" value="${ct.umRate}" onchange="updateCardTypeField('${agency.id}','${ct.id}','umRate', this.value)">
+            <input type="number" value="${ct.agentRate}" onchange="updateCardTypeField('${agency.id}','${ct.id}','agentRate', this.value)">
+            <button class="icon-btn" onclick="removeCardType('${agency.id}','${ct.id}')" title="Remove">\u2716</button>
+          </div>
+        `).join('')}
+        <div style="padding:10px 0 6px;"><button class="btn small secondary" onclick="openCardTypeModal('${agency.id}')">+ Add Card Type</button></div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function toggleRatesAccordion(agencyId){
+  state.ui.ratesOpen[agencyId] = !state.ui.ratesOpen[agencyId];
+  renderMain();
+}
+
+function updateCardTypeField(agencyId, ctId, field, val){
+  update(s=>{
+    const ct = findCardType(getAgency(agencyId), ctId);
+    if(ct) ct[field] = Number(val)||0;
+  });
+}
+
+
+/* ---------------- Top-level Agent Portal Tab (cross-agency summary, PIN-gated) ---------------- */
+function renderAgentPortalTab(){
+  const all = allEntriesFlat();
+  const selectedId = state.ui.reportSelectedAgent;
+  const selectedAgentObj = selectedId ? state.agents.find(a=>a.id===selectedId) : null;
+
+  if(selectedAgentObj){
+    const entries = all.filter(e=>e.agentId===selectedId).sort((a,b)=>b.date.localeCompare(a.date));
+    const byAgency = {};
+    let grand = 0;
+    entries.forEach(e=>{
+      byAgency[e.agencyName] = (byAgency[e.agencyName]||0) + e.agentFinal;
+      grand += e.agentFinal;
+    });
+
+    const byCardType = {};
+    entries.forEach(e=>{
+      const key = e.agencyName + ' \u2013 ' + e.cardTypeName;
+      byCardType[key] = (byCardType[key]||0) + 1;
+    });
+
+    return `
+      <button class="back-link" onclick="selectAgentPortalTabAgent(null)">\u2190 Back to all agents</button>
+      <div class="section-title">Agent Portal \u00b7 Summary Report</div>
+      <div class="grid">
+        <div class="stat"><div class="label">Agent's Name</div><div class="value">${escapeHtml(selectedAgentObj.name)}</div></div>
+        <div class="stat"><div class="label">Report Date</div><div class="value">${todayStr()}</div></div>
+      </div>
+
+      <div class="section-title">Client Records</div>
+      <div class="card table-wrap">
+        ${entries.length ? `
+        <table>
+          <thead><tr><th>Client's Name</th><th>Date Approved</th><th>Agency Name</th><th>Card Type</th><th>Total Commission</th></tr></thead>
+          <tbody>
+          ${entries.map(e=>`
+            <tr>
+              <td>${escapeHtml(e.clientName)}</td>
+              <td>${e.date}</td>
+              <td>${escapeHtml(e.agencyName)}</td>
+              <td>${escapeHtml(e.cardTypeName)}</td>
+              <td>${peso(e.agentFinal)}</td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>` : '<div class="empty">No records for this agent yet.</div>'}
+      </div>
+
+      <div class="section-title">Card Type Summary <span class="hint">Quantity approved</span></div>
+      <div class="card table-wrap">
+        ${Object.keys(byCardType).length ? `
+        <table>
+          <thead><tr><th>Card Type</th><th>Quantity</th></tr></thead>
+          <tbody>
+          ${Object.entries(byCardType).map(([name,qty])=>`
+            <tr><td>${escapeHtml(name)}</td><td>${qty}</td></tr>
+          `).join('')}
+          </tbody>
+        </table>` : '<div class="empty">No records yet.</div>'}
+      </div>
+
+      <div class="section-title">Gross Commission <span class="hint">Sum across Unionbank, ORC Mktg Srvcs. and ECR</span></div>
+      <div class="grid">
+        ${Object.entries(byAgency).map(([name,amt])=>`
+          <div class="stat"><div class="label">${escapeHtml(name)}</div><div class="value money">${peso(amt)}</div></div>
+        `).join('')}
+        <div class="stat"><div class="label">Grand Total</div><div class="value money">${peso(grand)}</div></div>
+      </div>
+    `;
+  }
+
+  const byAgent = {};
+  all.forEach(e=>{
+    if(!byAgent[e.agentId]) byAgent[e.agentId] = { name: e.agentName, count:0, total:0 };
+    byAgent[e.agentId].count++;
+    byAgent[e.agentId].total += e.agentFinal;
+  });
+  const ranked = Object.entries(byAgent).sort((a,b)=>b[1].total-a[1].total);
+
+  return `
+    <div class="section-title">Agent Portal <span class="hint">Summary report by agent name, across Unionbank, ORC Mktg Srvcs. and ECR</span></div>
+    <div class="card">
+      <label>Filter by Agent</label>
+      <select onchange="if(this.value)selectAgentPortalTabAgent(this.value)">
+        <option value="">All Agents</option>
+        ${state.agents.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card table-wrap">
+      ${ranked.length ? `
+      <table>
+        <thead><tr><th>Agent Name</th><th>Total Records</th><th>Gross Commission</th></tr></thead>
+        <tbody>
+        ${ranked.map(([agentId,v])=>`
+          <tr class="clickable" onclick="selectAgentPortalTabAgent('${agentId}')">
+            <td><b>${escapeHtml(v.name)}</b></td>
+            <td>${v.count}</td>
+            <td>${peso(v.total)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No client records yet.</div>'}
+    </div>
+  `;
+}
+
+function selectAgentPortalTabAgent(agentId){
+  state.ui.reportSelectedAgent = agentId;
+  renderMain();
+}
+
+/* ---------------- Agency Tab (Unionbank / ORC / ECR / custom) ---------------- */
+function renderAgencyTab(agency){
+  const section = state.ui.agencySection[agency.id] || 'portal';
+  return `
+    <nav class="subtabs">
+      <button class="${section==='portal'?'active':''}" onclick="setAgencySection('${agency.id}','portal')">Agent Portal</button>
+      <button class="${section==='tracker'?'active':''}" onclick="setAgencySection('${agency.id}','tracker')">Commission Tracker</button>
+      <button class="${section==='report'?'active':''}" onclick="setAgencySection('${agency.id}','report')">Sales Report</button>
+    </nav>
+    ${section==='portal' ? renderAgentPortal(agency) : ''}
+    ${section==='tracker' ? renderCommissionTracker(agency) : ''}
+    ${section==='report' ? renderSalesReport(agency) : ''}
+  `;
+}
+
+function setAgencySection(agencyId, section){
+  state.ui.agencySection[agencyId] = section;
+  renderMain();
+}
+
+/* ---- Agent Portal ---- */
+function renderAgentPortal(agency){
+  const entries = agency.entries.map(e=>{
+    const f = computeEntryFigures(e);
+    const ct = findCardType(agency, e.cardTypeId);
+    return { ...e, ...f, cardTypeName: ct?ct.name:(e.cardTypeNameSnapshot||'\u2014'),
+             agentName: getAgentName(e.agentId), bankName: bankFromCardType(agency.name, ct?ct.name:'') };
+  });
+
+  const selectedAgent = state.ui.selectedAgent[agency.id] || null;
+
+  if(selectedAgent){
+    const agentEntries = entries.filter(e=>e.agentName===selectedAgent).sort((a,b)=>b.date.localeCompare(a.date));
+    const total = agentEntries.reduce((s,e)=>s+e.agentFinal,0);
+    return `
+      <button class="back-link" onclick="selectPortalAgent('${agency.id}', null)">\u2190 Back to all agents</button>
+      <div class="section-title">${escapeHtml(selectedAgent)} <span class="hint">${agentEntries.length} record${agentEntries.length===1?'':'s'} \u00b7 ${peso(total)} total</span></div>
+      <div class="card table-wrap">
+        ${agentEntries.length ? `
+        <table>
+          <thead><tr><th>Client Name</th><th>Approval Date</th><th>Bank Name</th><th>Card Type</th><th>Agent Commission</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          ${agentEntries.map(e=>`
+            <tr>
+              <td>${escapeHtml(e.clientName)}</td>
+              <td>${e.date}</td>
+              <td>${escapeHtml(e.bankName)}</td>
+              <td>${escapeHtml(e.cardTypeName)}</td>
+              <td>${peso(e.agentFinal)}</td>
+              <td><select class="status-select st-${e.status}" onchange="updateEntryStatus('${agency.id}','${e.id}', this.value)">
+                ${STATUSES.map(s=>`<option value="${s}" ${s===e.status?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}
+              </select></td>
+              <td><button class="icon-btn" onclick="removeEntry('${agency.id}','${e.id}')">\u2716</button></td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>` : '<div class="empty">No records for this agent yet.</div>'}
+      </div>
+    `;
+  }
+
+  const byAgent = {};
+  entries.forEach(e=>{
+    if(!byAgent[e.agentName]) byAgent[e.agentName] = { count:0, total:0 };
+    byAgent[e.agentName].count++;
+    byAgent[e.agentName].total += e.agentFinal;
+  });
+
+  return `
+    <div class="section-title">Agent Portal <span class="hint">Tap an agent to view their records</span></div>
+    <div class="card table-wrap">
+      ${Object.keys(byAgent).length ? `
+      <table>
+        <thead><tr><th>Agent Name</th><th>Approvals</th><th>Commission Released</th></tr></thead>
+        <tbody>
+        ${Object.entries(byAgent).map(([name,v])=>`
+          <tr class="clickable" onclick="selectPortalAgent('${agency.id}','${name.replace(/'/g,"\\'")}')">
+            <td><b>${escapeHtml(name)}</b></td>
+            <td>${v.count}</td>
+            <td>${peso(v.total)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No client records logged for this agency yet. Add clients from the ProCards tab.</div>'}
+    </div>
+  `;
+}
+
+function selectPortalAgent(agencyId, name){
+  state.ui.selectedAgent[agencyId] = name;
+  renderMain();
+}
+
+/* ---- Commission Tracker ---- */
+function renderCommissionTracker(agency){
+  const month = state.ui.agencyMonth[agency.id] || curMonthStr();
+  const entries = agency.entries
+    .map(e=>({ ...e, ...computeEntryFigures(e) }))
+    .filter(e=>e.date.slice(0,7)===month);
+
+  const totalAgencyCommission = entries.reduce((s,e)=>s+e.agencyCommission,0);
+  const totalAgentReleased = entries.reduce((s,e)=>s+e.agentFinal,0);
+  const umCommission = totalAgencyCommission - totalAgentReleased;
+  const penalty = entries.reduce((s,e)=>s+e.dnaDeducted,0);
+
+  return `
+    <div class="section-title">
+      Commission Tracker
+      <span><input type="month" value="${month}" onchange="setAgencyMonth('${agency.id}', this.value)" style="width:auto;"></span>
+    </div>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">${monthLabelFromStr(month)}</div>
+    <div class="grid">
+      <div class="stat"><div class="label">Approvals</div><div class="value">${entries.length}</div></div>
+      <div class="stat"><div class="label">Total Agency Commission</div><div class="value money">${peso(totalAgencyCommission)}</div></div>
+      <div class="stat"><div class="label">Total Agent Commission Released</div><div class="value money">${peso(totalAgentReleased)}</div></div>
+      <div class="stat"><div class="label">Unit Manager Commission</div><div class="value money">${peso(umCommission)}</div></div>
+      <div class="stat"><div class="label">Penalty (DNA)</div><div class="value penalty">${peso(penalty)}</div></div>
+    </div>
+  `;
+}
+
+function setAgencyMonth(agencyId, val){
+  state.ui.agencyMonth[agencyId] = val;
+  renderMain();
+}
+
+/* ---- Sales Report ---- */
+function renderSalesReport(agency){
+  const mode = state.ui.agencyReportMode[agency.id] || 'monthly';
+  const entries = agency.entries.map(e=>{
+    const ct = findCardType(agency, e.cardTypeId);
+    return { ...e, ...computeEntryFigures(e), cardTypeName: ct?ct.name:(e.cardTypeNameSnapshot||'\u2014') };
+  });
+
+  const groups = {};
+  entries.forEach(e=>{
+    const key = mode==='weekly' ? weekKey(e.date) : e.date.slice(0,7);
+    if(!groups[key]) groups[key] = { count:0, agencyTotal:0, agentTotal:0, umTotal:0 };
+    groups[key].count++;
+    groups[key].agencyTotal += e.agencyCommission;
+    groups[key].agentTotal += e.agentFinal;
+    groups[key].umTotal += e.umCommission;
+  });
+  const rows = Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0]));
+
+  const byCardType = {};
+  entries.forEach(e=>{
+    if(!byCardType[e.cardTypeName]) byCardType[e.cardTypeName] = { count:0, agencyTotal:0, agentTotal:0 };
+    byCardType[e.cardTypeName].count++;
+    byCardType[e.cardTypeName].agencyTotal += e.agencyCommission;
+    byCardType[e.cardTypeName].agentTotal += e.agentFinal;
+  });
+  const cardTypeRows = Object.entries(byCardType).sort((a,b)=>b[1].count-a[1].count);
+
+  return `
+    <div class="section-title">
+      Sales Report
+      <span class="row">
+        <button class="btn small ${mode==='weekly'?'':'secondary'}" onclick="setReportMode('${agency.id}','weekly')">Weekly</button>
+        <button class="btn small ${mode==='monthly'?'':'secondary'}" onclick="setReportMode('${agency.id}','monthly')">Monthly</button>
+      </span>
+    </div>
+    <div class="card table-wrap">
+      ${rows.length ? `
+      <table>
+        <thead><tr><th>${mode==='weekly'?'Week':'Month'}</th><th>Approvals</th><th>Agency Commission</th><th>Agent Commission Released</th><th>UM Commission</th></tr></thead>
+        <tbody>
+        ${rows.map(([k,v])=>`
+          <tr>
+            <td>${mode==='weekly'?escapeHtml(k):escapeHtml(monthLabelFromStr(k))}</td>
+            <td>${v.count}</td>
+            <td>${peso(v.agencyTotal)}</td>
+            <td>${peso(v.agentTotal)}</td>
+            <td>${peso(v.umTotal)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No records yet to report on.</div>'}
+    </div>
+
+    <div class="section-title">Card Type Summary <span class="hint">Quantity approved & commission</span></div>
+    <div class="card table-wrap">
+      ${cardTypeRows.length ? `
+      <table>
+        <thead><tr><th>Card Type</th><th>Quantity</th><th>Agency Commission</th><th>Agent Commission Released</th></tr></thead>
+        <tbody>
+        ${cardTypeRows.map(([name,v])=>`
+          <tr>
+            <td>${escapeHtml(name)}</td>
+            <td>${v.count}</td>
+            <td>${peso(v.agencyTotal)}</td>
+            <td>${peso(v.agentTotal)}</td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">No records yet to report on.</div>'}
+    </div>
+  `;
+}
+
+function setReportMode(agencyId, mode){
+  state.ui.agencyReportMode[agencyId] = mode;
+  renderMain();
+}
+
+/* ---- Entry status / removal ---- */
+function updateEntryStatus(agencyId, entryId, status){
+  update(s=>{
+    const ag = getAgency(agencyId);
+    const e = ag.entries.find(x=>x.id===entryId);
+    if(e) e.status = status;
+  });
+}
+
+function removeEntry(agencyId, entryId){
+  if(!confirm('Remove this client record?')) return;
+  update(s=>{
+    const ag = getAgency(agencyId);
+    ag.entries = ag.entries.filter(x=>x.id!==entryId);
+  });
+}
+
+function removeCardType(agencyId, ctId){
+  const ag = getAgency(agencyId);
+  const inUse = ag.entries.some(e=>e.cardTypeId===ctId);
+  if(inUse){ alert('This card type is used in existing client records. Remove or reassign those records first.'); return; }
+  if(!confirm('Remove this card type?')) return;
+  update(s=>{
+    ag.cardTypes = ag.cardTypes.filter(c=>c.id!==ctId);
+  });
+}
+
+
+/* ---------------- Modals ---------------- */
+function closeModal(){
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+const ORC_RANGES = [
+  { label: '\u20b150,000-below', cardTypeName: 'Classic' },
+  { label: '\u20b151,000-\u20b1299,000', cardTypeName: 'Gold' },
+  { label: '\u20b1300,000-Up', cardTypeName: 'Platinum' }
+];
+
+function openAddClientModal(){
+  const agencies = nonOverviewAgencies();
+  const defaultAg = agencies[0];
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add Client</h3>
+        <form onsubmit="submitAddClient(event)">
+          <div class="form-grid" style="grid-template-columns:1fr;">
+            <div>
+              <label>Client's Name</label>
+              <input type="text" name="clientName" required placeholder="Juan Dela Cruz">
+            </div>
+            <div>
+              <label>Date Approved</label>
+              <input type="date" name="date" value="${todayStr()}" required>
+            </div>
+            <div>
+              <label>Agency</label>
+              <select name="agencyId" id="ac-agency" onchange="onAddClientAgencyChange()">
+                ${agencies.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div id="ac-range-wrap" style="${defaultAg.id==='orc'?'':'display:none;'}">
+              <label>Credit Limit Range</label>
+              <select name="creditRange" id="ac-range" onchange="onAddClientRangeChange()">
+                ${ORC_RANGES.map(r=>`<option value="${escapeHtml(r.cardTypeName)}">${escapeHtml(r.label)} (${escapeHtml(r.cardTypeName)})</option>`).join('')}
+              </select>
+            </div>
+            <div id="ac-cardtype-wrap">
+              <label>Card Type</label>
+              <select name="cardTypeId" id="ac-cardtype" onchange="onAddClientCardTypeChange()"></select>
+            </div>
+            <div class="row" style="gap:8px;">
+              <div style="flex:1;">
+                <label>UM Rate</label>
+                <input type="number" name="umRate" id="ac-umrate">
+              </div>
+              <div style="flex:1;">
+                <label>Agent Commission</label>
+                <input type="number" name="agentRate" id="ac-agentrate">
+              </div>
+            </div>
+            <div>
+              <label>Agent Name</label>
+              <select name="agentId" id="ac-agent" required>
+                ${state.agents.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+                <option value="__new__">+ Add new agent\u2026</option>
+              </select>
+            </div>
+            <div id="ac-newagent-wrap" style="display:none;">
+              <label>New Agent Name</label>
+              <input type="text" id="ac-newagent-name" placeholder="Full name">
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Add Client</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  populateCardTypeSelect(defaultAg.id);
+  document.getElementById('ac-agent').addEventListener('change', function(){
+    document.getElementById('ac-newagent-wrap').style.display = this.value==='__new__' ? '' : 'none';
+  });
+}
+
+function populateCardTypeSelect(agencyId, presetCardTypeName){
+  const ag = getAgency(agencyId);
+  const sel = document.getElementById('ac-cardtype');
+  let types = ag.cardTypes;
+  if(agencyId==='orc' && presetCardTypeName){
+    types = ag.cardTypes.filter(c=>c.name===presetCardTypeName);
+  }
+  sel.innerHTML = types.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  onAddClientCardTypeChange();
+}
+
+function onAddClientAgencyChange(){
+  const agencyId = document.getElementById('ac-agency').value;
+  document.getElementById('ac-range-wrap').style.display = agencyId==='orc' ? '' : 'none';
+  if(agencyId==='orc'){
+    const rangeVal = document.getElementById('ac-range').value;
+    populateCardTypeSelect(agencyId, rangeVal);
+  } else {
+    populateCardTypeSelect(agencyId);
+  }
+}
+
+function onAddClientRangeChange(){
+  const agencyId = document.getElementById('ac-agency').value;
+  const rangeVal = document.getElementById('ac-range').value;
+  populateCardTypeSelect(agencyId, rangeVal);
+}
+
+function onAddClientCardTypeChange(){
+  const agencyId = document.getElementById('ac-agency').value;
+  const ctId = document.getElementById('ac-cardtype').value;
+  const ct = findCardType(getAgency(agencyId), ctId);
+  if(ct){
+    document.getElementById('ac-umrate').value = ct.umRate;
+    document.getElementById('ac-agentrate').value = ct.agentRate;
+  }
+}
+
+function submitAddClient(ev){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const agencyId = fd.get('agencyId');
+  let agentId = fd.get('agentId');
+
+  update(s=>{
+    if(agentId === '__new__'){
+      const name = (document.getElementById('ac-newagent-name').value||'').trim();
+      if(!name){ alert('Enter a name for the new agent.'); return; }
+      const newAgent = { id:'agent-'+uid(), name, pin:'' };
+      s.agents.push(newAgent);
+      agentId = newAgent.id;
+    }
+    const ag = getAgency(agencyId);
+    const ct = findCardType(ag, fd.get('cardTypeId'));
+    ag.entries.push({
+      id: uid(),
+      clientName: fd.get('clientName').trim(),
+      date: fd.get('date'),
+      cardTypeId: fd.get('cardTypeId'),
+      cardTypeNameSnapshot: ct?ct.name:'',
+      agentId,
+      umRate: Number(fd.get('umRate'))||0,
+      agentRate: Number(fd.get('agentRate'))||0,
+      status: 'ONHOLD',
+      source: 'main'
+    });
+  });
+  closeModal();
+}
+
+/* ---------------- Admin Tab (no PIN, no commission visibility) ---------------- */
+function renderAdminTab(){
+  const mine = allEntriesFlat()
+    .filter(e => e.source === 'admin')
+    .sort((a,b)=>b.date.localeCompare(a.date));
+
+  return `
+    <div class="section-title">Admin \u00b7 Add Client</div>
+    <div class="muted" style="font-size:12px;margin:-6px 0 14px;">This page is open to anyone with the link. It does not show commission amounts.</div>
+    <div class="card">
+      <div class="row">
+        <button class="btn full" onclick="openAdminAddClientModal()">+ Add Client</button>
+        <button class="btn secondary full" onclick="openAdminAddAgentModal()">+ Add Agent</button>
+      </div>
+    </div>
+
+    <div class="section-title">Your Submissions</div>
+    <div class="card table-wrap">
+      ${mine.length ? `
+      <table>
+        <thead><tr><th>Date</th><th>Client</th><th>Agency</th><th>Card Type</th><th>Agent</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        ${mine.map(e=>`
+          <tr>
+            <td>${e.date}</td>
+            <td>${escapeHtml(e.clientName)}</td>
+            <td>${escapeHtml(e.agencyName)}</td>
+            <td>${escapeHtml(e.cardTypeName)}</td>
+            <td>${escapeHtml(e.agentName)}</td>
+            <td><span class="badge badge-${e.status}">${STATUS_LABEL[e.status]}</span></td>
+            <td><button class="icon-btn" onclick="removeEntry('${e.agencyId}','${e.id}')">\u2716</button></td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>` : '<div class="empty">Nothing added yet. Use "+ Add Client" above.</div>'}
+    </div>
+  `;
+}
+
+function openAdminAddClientModal(){
+  const agencies = nonOverviewAgencies();
+  const defaultAg = agencies[0];
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add Client</h3>
+        <form onsubmit="submitAdminAddClient(event)">
+          <div class="form-grid" style="grid-template-columns:1fr;">
+            <div>
+              <label>Client's Name</label>
+              <input type="text" name="clientName" required placeholder="Juan Dela Cruz">
+            </div>
+            <div>
+              <label>Date Approved</label>
+              <input type="date" name="date" value="${todayStr()}" required>
+            </div>
+            <div>
+              <label>Agency</label>
+              <select name="agencyId" id="adm-agency" onchange="onAdminAgencyChange()">
+                ${agencies.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div id="adm-range-wrap" style="${defaultAg.id==='orc'?'':'display:none;'}">
+              <label>Credit Limit Range</label>
+              <select name="creditRange" id="adm-range" onchange="onAdminRangeChange()">
+                ${ORC_RANGES.map(r=>`<option value="${escapeHtml(r.cardTypeName)}">${escapeHtml(r.label)} (${escapeHtml(r.cardTypeName)})</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>Card Type</label>
+              <select name="cardTypeId" id="adm-cardtype"></select>
+            </div>
+            <div>
+              <label>Agent Name</label>
+              <select name="agentId" id="adm-agent" required>
+                ${state.agents.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+                <option value="__new__">+ Add new agent\u2026</option>
+              </select>
+            </div>
+            <div id="adm-newagent-wrap" style="display:none;">
+              <label>New Agent Name</label>
+              <input type="text" id="adm-newagent-name" placeholder="Full name">
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Add Client</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+  populateAdminCardTypeSelect(defaultAg.id);
+  document.getElementById('adm-agent').addEventListener('change', function(){
+    document.getElementById('adm-newagent-wrap').style.display = this.value==='__new__' ? '' : 'none';
+  });
+}
+
+function populateAdminCardTypeSelect(agencyId, presetCardTypeName){
+  const ag = getAgency(agencyId);
+  const sel = document.getElementById('adm-cardtype');
+  let types = ag.cardTypes;
+  if(agencyId==='orc' && presetCardTypeName){
+    types = ag.cardTypes.filter(c=>c.name===presetCardTypeName);
+  }
+  sel.innerHTML = types.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+}
+
+function onAdminAgencyChange(){
+  const agencyId = document.getElementById('adm-agency').value;
+  document.getElementById('adm-range-wrap').style.display = agencyId==='orc' ? '' : 'none';
+  if(agencyId==='orc'){
+    const rangeVal = document.getElementById('adm-range').value;
+    populateAdminCardTypeSelect(agencyId, rangeVal);
+  } else {
+    populateAdminCardTypeSelect(agencyId);
+  }
+}
+
+function onAdminRangeChange(){
+  const agencyId = document.getElementById('adm-agency').value;
+  const rangeVal = document.getElementById('adm-range').value;
+  populateAdminCardTypeSelect(agencyId, rangeVal);
+}
+
+function submitAdminAddClient(ev){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const agencyId = fd.get('agencyId');
+  let agentId = fd.get('agentId');
+
+  update(s=>{
+    if(agentId === '__new__'){
+      const name = (document.getElementById('adm-newagent-name').value||'').trim();
+      if(!name){ alert('Enter a name for the new agent.'); return; }
+      const newAgent = { id:'agent-'+uid(), name, pin:'' };
+      s.agents.push(newAgent);
+      agentId = newAgent.id;
+    }
+    const ag = getAgency(agencyId);
+    const ct = findCardType(ag, fd.get('cardTypeId'));
+    ag.entries.push({
+      id: uid(),
+      clientName: fd.get('clientName').trim(),
+      date: fd.get('date'),
+      cardTypeId: fd.get('cardTypeId'),
+      cardTypeNameSnapshot: ct?ct.name:'',
+      agentId,
+      umRate: ct?ct.umRate:0,
+      agentRate: ct?ct.agentRate:0,
+      status: 'ONHOLD',
+      source: 'admin'
+    });
+  });
+  closeModal();
+}
+
+function openAdminAddAgentModal(){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add Agent</h3>
+        <form onsubmit="submitAdminAddAgent(event)">
+          <label>Agent Name</label>
+          <input type="text" name="name" required placeholder="e.g. Maria Santos">
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Add Agent</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+function submitAdminAddAgent(ev){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const name = fd.get('name').trim();
+  update(s=>{ s.agents.push({ id:'agent-'+uid(), name, pin:'' }); });
+  closeModal();
+}
+
+function openAddAgentModal(){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add Agent</h3>
+        <form onsubmit="submitAddAgent(event)">
+          <label>Agent Name</label>
+          <input type="text" name="name" required placeholder="e.g. Maria Santos">
+          <label style="margin-top:10px;">Assign PIN Code</label>
+          <input type="text" name="pin" inputmode="numeric" placeholder="e.g. 1234" required>
+          <p class="muted" style="font-size:11px;margin-top:6px;">The agent uses this PIN to log into their own commission portal.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Add Agent</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+function submitAddAgent(ev){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const name = fd.get('name').trim();
+  const pin = (fd.get('pin')||'').trim();
+  if(pin && state.agents.some(a=>a.pin===pin)){
+    alert('This PIN is already assigned to another agent. Choose a different PIN.');
+    return;
+  }
+  update(s=>{ s.agents.push({ id:'agent-'+uid(), name, pin }); });
+  closeModal();
+}
+
+function openAddAgencyModal(){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add New Agency</h3>
+        <form onsubmit="submitNewAgency(event)">
+          <label>Agency Name</label>
+          <input type="text" name="name" required placeholder="e.g. China Bank">
+          <p class="muted" style="font-size:11.5px;margin:10px 0 0;">You can add card categories and their UM / Agent commission rates from the ProCards tab after creating the agency.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Create Agency</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+function submitNewAgency(ev){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  const name = fd.get('name').trim();
+  const id = 'ag-' + uid();
+  update(s=>{
+    s.agencies.push({ id, name, cardTypes:[{id:'ct-'+uid(), name:'Category 1', range:'', umRate:0, agentRate:0}], entries:[] });
+    s.ui.activeTab = id;
+  });
+  closeModal();
+}
+
+function openCardTypeModal(agencyId){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Add Card Type</h3>
+        <form onsubmit="submitNewCardType(event,'${agencyId}')">
+          <label>Card Type Name</label>
+          <input type="text" name="name" required placeholder="e.g. RCBC Titanium">
+          <label style="margin-top:10px;">Credit Limit Label (optional)</label>
+          <input type="text" name="range" placeholder="e.g. \u20b1300,000 & up">
+          <div class="row" style="margin-top:10px;">
+            <div style="flex:1;"><label>UM Rate</label><input type="number" name="umRate" value="0"></div>
+            <div style="flex:1;"><label>Agent Rate</label><input type="number" name="agentRate" value="0"></div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn secondary full" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn full">Add Card Type</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+function submitNewCardType(ev, agencyId){
+  ev.preventDefault();
+  const fd = new FormData(ev.target);
+  update(s=>{
+    getAgency(agencyId).cardTypes.push({
+      id: 'ct-'+uid(),
+      name: fd.get('name').trim(),
+      range: fd.get('range').trim(),
+      umRate: Number(fd.get('umRate'))||0,
+      agentRate: Number(fd.get('agentRate'))||0
+    });
+  });
+  closeModal();
+}
+
+/* ---------------- Settings Tab ---------------- */
+function renderSettingsTab(){
+  return `
+    <div class="section-title">Settings</div>
+    <div class="card">
+      <label>DNA Penalty Rate (deducted from agent commission when status is DNA)</label>
+      <input type="number" value="${state.settings.dnaRate}" min="0" onchange="updateDnaRate(this.value)" style="max-width:220px;">
+      <p class="muted" style="font-size:11.5px;margin-top:10px;">When a client record is tagged DNA, this amount is subtracted from that agent's commission on the record.</p>
+    </div>
+    <div class="section-title">Agents \u00b7 PIN Codes</div>
+    <div class="card">
+      <p class="muted" style="font-size:11.5px;margin:0 0 10px;">Assign each agent a unique PIN. They use it to log into the Agent Commission Portal (separate link) to view their own report only.</p>
+      ${state.agents.length ? state.agents.map(a=>`
+        <div class="row" style="justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);gap:8px;">
+          <span style="flex:1;">${escapeHtml(a.name)}</span>
+          <input type="text" inputmode="numeric" placeholder="PIN" value="${escapeHtml(a.pin||'')}" style="max-width:100px;" onchange="updateAgentPin('${a.id}', this.value)">
+          <button class="icon-btn" onclick="removeAgentGlobal('${a.id}')">\u2716</button>
+        </div>
+      `).join('') : '<div class="empty">No agents added yet.</div>'}
+      <div style="padding-top:10px;"><button class="btn small secondary" onclick="openAddAgentModal()">+ Add Agent</button></div>
+    </div>
+    <div class="section-title">Data</div>
+    <div class="card">
+      <p class="muted" style="font-size:12.5px;margin:0 0 10px;">Data is saved to your Supabase database \u2014 it stays put even if this page is updated or republished. Export a backup anytime as extra safety.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn secondary" onclick="exportData()">Export Backup (.json)</button>
+        <button class="btn secondary" onclick="document.getElementById('import-file-input').click()">Import Backup</button>
+        <input type="file" id="import-file-input" accept="application/json" style="display:none;" onchange="importData(event)">
+      </div>
+      <button class="btn danger" onclick="resetAllData()">Reset All Data</button>
+    </div>
+  `;
+}
+
+function updateDnaRate(val){
+  update(s=>{ s.settings.dnaRate = Number(val)||0; });
+}
+
+function updateAgentPin(agentId, val){
+  const pin = val.trim();
+  if(pin && state.agents.some(a=>a.id!==agentId && a.pin===pin)){
+    alert('This PIN is already assigned to another agent. Choose a different PIN.');
+    renderMain();
+    return;
+  }
+  update(s=>{
+    const a = s.agents.find(x=>x.id===agentId);
+    if(a) a.pin = pin;
+  });
+}
+
+function removeAgentGlobal(agentId){
+  const inUse = nonOverviewAgencies().some(ag=>ag.entries.some(e=>e.agentId===agentId));
+  if(inUse){ alert('This agent has existing client records. Remove those records first.'); return; }
+  if(!confirm('Remove this agent?')) return;
+  update(s=>{ s.agents = s.agents.filter(a=>a.id!==agentId); });
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'procards-crm-backup-' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.agencies || !parsed.agents){ alert('This file does not look like a valid backup.'); return; }
+      if(!confirm('This will replace all current data with the backup file. Continue?')) return;
+      update(s=>{
+        Object.keys(s).forEach(k=>delete s[k]);
+        const merged = Object.assign(defaultState(), parsed);
+        merged.ui = Object.assign(defaultState().ui, parsed.ui||{});
+        Object.assign(s, merged);
+      });
+      alert('Backup restored successfully.');
+    }catch(err){
+      alert('Could not read this file. Make sure it is a valid backup .json file.');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+
+function resetAllData(){
+  if(!confirm('This will permanently delete all agencies, agents, and client records. Continue?')) return;
+  update(s=>{
+    const fresh = defaultState();
+    Object.keys(s).forEach(k=>delete s[k]);
+    Object.assign(s, fresh);
+  });
+}
+
+/* ---------------- Init ---------------- */
+loadState();
+
+</script>
+</body>
+</html>
