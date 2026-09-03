@@ -42,6 +42,10 @@
   .muted{color:var(--muted);}
   .error{color:var(--red);font-size:12px;margin-top:10px;}
   footer.save-note{text-align:center;color:var(--muted);font-size:11px;padding:16px 0 4px;}
+  .filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end;}
+  .filter-row .field{flex:1;min-width:130px;}
+  input[type=date]{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:#232320;color:var(--text);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 </style>
 </head>
 <body>
@@ -62,6 +66,18 @@ const escapeHtml = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<
 let crmState = null;
 let currentAgent = null;
 let pollTimer = null;
+
+/* ---------------- Date filter state ---------------- */
+function pad(n){ return String(n).padStart(2,'0'); }
+function toISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function defaultFrom(){ const d=new Date(); return `${d.getFullYear()}-01-01`; }
+function defaultTo(){ return toISO(new Date()); }
+let filterFrom = defaultFrom();
+let filterTo = defaultTo();
+function isDefaultRange(){ return filterFrom === defaultFrom() && filterTo === defaultTo(); }
+function inRange(dateStr, from, to){
+  return (!from || dateStr >= from) && (!to || dateStr <= to);
+}
 
 const SUPABASE_URL = 'https://djffchbmdvclzcfvoyhi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable__zMWLW4AsgYkDMFJGZH_Sg_2apYlo-i';
@@ -157,14 +173,49 @@ function logout(){
   renderLogin();
 }
 
+function applyFilter(ev){
+  ev.preventDefault();
+  filterFrom = document.getElementById('filter-from').value || '';
+  filterTo = document.getElementById('filter-to').value || '';
+  renderReport();
+}
+
+function resetFilter(){
+  filterFrom = defaultFrom();
+  filterTo = defaultTo();
+  renderReport();
+}
+
+function exportCSV(){
+  const all = recordsForAgent(currentAgent.id);
+  const filtered = all.filter(e => inRange(e.date, filterFrom, filterTo));
+  const rows = [['Client Name','Date Approved','Agency Name','Card Type','Commission']];
+  filtered.forEach(e => rows.push([e.clientName, e.date, e.agencyName, e.cardTypeName, e.commission]));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const rangeLabel = `${filterFrom||'all'}_to_${filterTo||'all'}`;
+  a.href = url;
+  a.download = `${currentAgent.name.replace(/\s+/g,'_')}_commission_${rangeLabel}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function renderReport(){
-  const entries = recordsForAgent(currentAgent.id);
+  const allEntries = recordsForAgent(currentAgent.id);
+  const entries = allEntries.filter(e => inRange(e.date, filterFrom, filterTo));
   const byAgency = {};
   let grand = 0;
   entries.forEach(e=>{
     byAgency[e.agencyName] = (byAgency[e.agencyName]||0) + e.commission;
     grand += e.commission;
   });
+  const summaryLabel = isDefaultRange()
+    ? `Current Commission \u2014 ${new Date().getFullYear()} to date`
+    : `Filtered Summary \u2014 ${filterFrom||'\u2014'} to ${filterTo||'\u2014'}`;
 
   document.getElementById('main').innerHTML = `
     <div class="section-title">
@@ -172,7 +223,28 @@ function renderReport(){
       <button class="btn small secondary" onclick="logout()">Log out</button>
     </div>
 
-    <div class="section-title">Total Gross Commission <span class="hint">by agency</span></div>
+    <div class="section-title">Filter by Date <span class="hint">view any period's summary report</span></div>
+    <div class="card">
+      <form class="filter-row" onsubmit="applyFilter(event)">
+        <div class="field">
+          <label>From</label>
+          <input type="date" id="filter-from" value="${filterFrom}">
+        </div>
+        <div class="field">
+          <label>To</label>
+          <input type="date" id="filter-to" value="${filterTo}">
+        </div>
+        <div class="field" style="flex:0 0 auto;">
+          <button type="submit" class="btn small">Apply</button>
+        </div>
+      </form>
+      <div class="btn-row">
+        <button class="btn small secondary" onclick="resetFilter()">Reset to This Year</button>
+        <button class="btn small secondary" onclick="exportCSV()">\u2b07 Export CSV</button>
+      </div>
+    </div>
+
+    <div class="section-title">${summaryLabel} <span class="hint">by agency</span></div>
     <div class="grid">
       ${Object.keys(byAgency).length ? Object.entries(byAgency).map(([name,amt])=>`
         <div class="stat"><div class="label">${escapeHtml(name)}</div><div class="value money">${peso(amt)}</div></div>
@@ -196,7 +268,7 @@ function renderReport(){
           </tr>
         `).join('')}
         </tbody>
-      </table>` : '<div class="empty">No records yet.</div>'}
+      </table>` : '<div class="empty">No records in this date range.</div>'}
     </div>
     <footer class="save-note">Report refreshes automatically every 15 seconds</footer>
   `;

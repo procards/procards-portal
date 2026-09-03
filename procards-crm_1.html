@@ -581,7 +581,7 @@ function renderTabs(){
   if(unlocked){
     html += `<button class="add-btn" onclick="openAddAgencyModal()">+ Add Agency</button>`;
   }
-  html += `<button class="${state.ui.activeTab==='settings'?'active':''}" onclick="setTab('settings')">${unlocked?'\u2699\ufe0f':'\ud83d\udd12'} Settings</button>`;
+  html += `<button class="${state.ui.activeTab==='settings'?'active':''}" onclick="setTab('settings')">${unlocked?'\u2699\ufe0f':'\ud83d\udd12'} Settings${getArchivableYears().length?' \ud83d\udd34':''}</button>`;
   tabsEl.innerHTML = html;
 }
 
@@ -1649,6 +1649,7 @@ function renderSettingsTab(){
       `).join('') : '<div class="empty">No agents added yet.</div>'}
       <div style="padding-top:10px;"><button class="btn small secondary" onclick="openAddAgentModal()">+ Add Agent</button></div>
     </div>
+    ${renderArchiveSection()}
     <div class="section-title">Data</div>
     <div class="card">
       <p class="muted" style="font-size:12.5px;margin:0 0 10px;">Data is saved to your Supabase database \u2014 it stays put even if this page is updated or republished. Export a backup anytime as extra safety.</p>
@@ -1664,6 +1665,77 @@ function renderSettingsTab(){
 
 function updateDnaRate(val){
   update(s=>{ s.settings.dnaRate = Number(val)||0; });
+}
+
+/* ---------------- Year-End Archive & Purge ---------------- */
+function getEntryYear(dateStr){ return dateStr ? dateStr.slice(0,4) : ''; }
+
+function getArchivableYears(){
+  const years = new Set();
+  const cy = String(new Date().getFullYear());
+  nonOverviewAgencies().forEach(ag=>{
+    (ag.entries||[]).forEach(e=>{
+      const y = getEntryYear(e.date);
+      if(y && y < cy) years.add(y);
+    });
+  });
+  return Array.from(years).sort();
+}
+
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function archiveAndPurgeYears(){
+  const years = getArchivableYears();
+  if(!years.length){ alert('No past-year records to archive.'); return; }
+  const rows = allEntriesFlat().filter(e => years.includes(getEntryYear(e.date)));
+  if(!rows.length){ alert('No past-year records to archive.'); return; }
+  const yearLabel = years.join(', ');
+  if(!confirm(`This will download a full backup of ${rows.length} record(s) from ${yearLabel}, then PERMANENTLY delete them from the live system. This cannot be undone. Continue?`)) return;
+  if(!confirm(`Are you sure? Type OK on the next prompt only if you have saved the downloaded files.`)) return;
+
+  const csvRows = [['Agency','Agent','Client Name','Date Approved','Card Type','Status','Agency Commission','Agent Commission','DNA Deducted']];
+  rows.forEach(e=>{
+    csvRows.push([e.agencyName, e.agentName, e.clientName, e.date, e.cardTypeName, e.status, e.agencyCommission, e.agentFinal, e.dnaDeducted]);
+  });
+  const csv = csvRows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadBlob(csv, `procards-archive-${years.join('_')}-${todayStr()}.csv`, 'text/csv;charset=utf-8;');
+  downloadBlob(JSON.stringify(rows, null, 2), `procards-archive-${years.join('_')}-${todayStr()}.json`, 'application/json');
+
+  update(s=>{
+    s.agencies.forEach(ag=>{
+      if(ag.overview) return;
+      ag.entries = (ag.entries||[]).filter(e => !years.includes(getEntryYear(e.date)));
+    });
+    if(!s.settings.archivedYears) s.settings.archivedYears = [];
+    years.forEach(y=>{ if(!s.settings.archivedYears.includes(y)) s.settings.archivedYears.push(y); });
+  });
+
+  alert(`Archived and deleted ${rows.length} record(s) from ${yearLabel}. Backup files were downloaded to your device \u2014 keep them somewhere safe.`);
+}
+
+function renderArchiveSection(){
+  const years = getArchivableYears();
+  const cy = new Date().getFullYear();
+  return `
+    <div class="section-title">Year-End Archive & Purge</div>
+    <div class="card">
+      <p class="muted" style="font-size:12.5px;margin:0 0 10px;">Downloads a full backup (CSV + JSON) of past-year records, then permanently deletes them from the live system. Records from ${cy} are never touched.</p>
+      ${years.length ? `
+        <p style="font-size:12.5px;margin:0 0 10px;">Unarchived records found for: <strong>${years.join(', ')}</strong></p>
+        <button class="btn danger" onclick="archiveAndPurgeYears()">Export & Purge ${years.join(', ')} Records</button>
+      ` : `<p class="muted" style="font-size:12.5px;">Nothing pending \u2014 all records are from the current year (${cy}).</p>`}
+    </div>
+  `;
 }
 
 function updateAgentPin(agentId, val){
